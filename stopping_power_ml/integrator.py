@@ -235,11 +235,12 @@ class TrajectoryIntegrator:
         # Perform the integration
         return quad(f, 0, 1, epsabs=abserr, full_output=full_output, points=near_points, limit=max_inter, **kwargs)
     
-    def create_force_calculator_given_displacement(self, start_point, traj_dir):
+    def create_force_calculator_given_displacement(self, start_point, traj_dir,scalar):
         """Create a function that computes the stopping force given displacement and current velocity
         
         :param start_point: [float], starting point in conventional cell fractional coordinates
         :param traj_dir: [float], directional of travel in cartesian coordiante
+        :param scalar: [int], multiples the force by a certain multiplier. Set to 1.
         :return: (float, float)->float Takes displacement in distance units and velocity magnitude and computes force
         """
         
@@ -250,12 +251,12 @@ class TrajectoryIntegrator:
         start_point = self.conv_strc.lattice.get_cartesian_coords(start_point)
         
         # Make the function
+        # This is the original source function (which is modified in make_ode_function), and will have to be troubleshooted for erroneous testcases.
         def output(disp, vel_mag):
             pos = start_point + disp * traj_dir
             x = self.featurizers.featurize(pos, vel_mag * traj_dir)
-            return self.model.predict(np.array([x]))[0]
+            return scalar*self.model.predict(np.array([x]))[0]
         return output
-        
 
 if __name__ == '__main__':
     from ase.atoms import Atoms, Atom
